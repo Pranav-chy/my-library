@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pranav's Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Karla:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --cream:#f0f6ff;
+  --warm:#ddeaf8;
+  --brown:#0d2a4a;
+  --mid:#2d6aa0;
+  --light:#7ab3d8;
+  --accent:#1565c0;
+  --green:#4a7c59;
+  --blue:#1565c0;
+  --purple:#6b4c8a;
+  --red:#8a2c2c;
+  --gold:#c49a2c;
+  --shadow:rgba(13,42,74,0.13);
+}
+
+body{background:linear-gradient(135deg,#e8f1fb 0%,#ffffff 60%,#ddeaf8 100%);color:var(--brown);font-family:'Karla',sans-serif;min-height:100vh;}
+
+/* ---- HEADER ---- */
+header{
+  background:linear-gradient(90deg,#0d2a4a 0%,#1565c0 100%);
+  padding:1.5rem 2.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 4px 20px rgba(13,42,74,0.25);
+}
+.logo-wrap{display:flex;flex-direction:column;gap:0.2rem;}
+.logo{font-family:'Libre Baskerville',serif;font-size:1.6rem;color:#ffffff;letter-spacing:0.02em;}
+.logo span{color:#90caf9;font-style:italic;}
+.tagline{font-size:0.7rem;color:rgba(144,202,249,0.8);letter-spacing:0.18em;text-transform:uppercase;font-family:'Karla',sans-serif;}
+.header-stats{display:flex;gap:2rem;}
+.stat{text-align:center;}
+.stat-num{font-family:'Libre Baskerville',serif;font-size:1.4rem;color:#90caf9;}
+.stat-lbl{font-size:0.7rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;}
+
+/* ---- TABS ---- */
+.tabs{display:flex;background:#ffffff;border-bottom:2px solid rgba(21,101,192,0.15);}
+.tab-btn{
+  padding:1rem 2rem;font-family:'Karla',sans-serif;font-size:0.9rem;font-weight:600;
+  border:none;background:none;cursor:pointer;color:#5a8ab0;
+  letter-spacing:0.05em;text-transform:uppercase;border-bottom:3px solid transparent;
+  margin-bottom:-2px;transition:all 0.2s;
+}
+.tab-btn.active{color:#1565c0;border-bottom-color:#1565c0;}
+.tab-btn:hover:not(.active){color:var(--brown);}
+
+/* ---- MAIN ---- */
+.main{padding:2rem 2.5rem;max-width:1300px;margin:0 auto;}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ---- TOOLBAR ---- */
+.toolbar{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;align-items:center;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap input{
+  width:100%;padding:0.75rem 1rem 0.75rem 2.8rem;
+  border:1.5px solid rgba(61,43,26,0.15);border-radius:8px;
+  background:#fff;font-family:'Karla',sans-serif;font-size:0.9rem;color:var(--brown);
+  transition:border-color 0.2s;
+}
+.search-wrap input:focus{outline:none;border-color:var(--accent);}
+.search-wrap::before{content:'🔍';position:absolute;left:0.9rem;top:50%;transform:translateY(-50%);font-size:0.85rem;}
+select{
+  padding:0.75rem 1rem;border:1.5px solid rgba(61,43,26,0.15);border-radius:8px;
+  background:#fff;font-family:'Karla',sans-serif;font-size:0.9rem;color:var(--brown);cursor:pointer;
+}
+select:focus{outline:none;border-color:var(--accent);}
+.btn-add{
+  padding:0.75rem 1.5rem;background:#1565c0;color:#fff;border:none;border-radius:8px;
+  font-family:'Karla',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;
+  transition:all 0.2s;white-space:nowrap;
+}
+.btn-add:hover{background:#0d47a1;transform:translateY(-1px);box-shadow:0 4px 12px rgba(21,101,192,0.35);}
+
+/* ---- BOOK GRID ---- */
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;}
+.book-card{
+  background:#fff;border-radius:12px;padding:1.5rem;
+  box-shadow:0 2px 12px var(--shadow);border:1px solid rgba(61,43,26,0.07);
+  transition:transform 0.25s,box-shadow 0.25s;cursor:pointer;
+}
+.book-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px var(--shadow);}
+.book-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;}
+.genre-badge{
+  font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;
+  padding:0.25rem 0.6rem;border-radius:20px;
+}
+.genre-fiction{background:#e8f0ea;color:var(--green);}
+.genre-nonfiction{background:#e8eef4;color:var(--blue);}
+.genre-mystery{background:#ede8f4;color:var(--purple);}
+.genre-scifi{background:#f4e8e8;color:var(--red);}
+.genre-biography{background:#f4f0e0;color:var(--gold);}
+.genre-history{background:#f0ebe4;color:var(--mid);}
+.genre-children{background:#fce8f4;color:#8a2c6b;}
+.genre-adolescent{background:#e8f4fc;color:#2c6b8a;}
+.genre-ai{background:#e8fce8;color:#1a6b3a;}
+.genre-philosophy{background:#f4ece8;color:#6b3a1a;}
+.genre-science{background:#e8f0fc;color:#1a3a8a;}
+.genre-other{background:#f0f0f0;color:#666;}
+
+.book-actions{display:flex;gap:0.4rem;}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:1rem;padding:0.2rem;border-radius:4px;transition:background 0.2s;}
+.icon-btn:hover{background:var(--warm);}
+
+.book-title{font-family:'Libre Baskerville',serif;font-size:1.05rem;font-weight:700;margin-bottom:0.3rem;line-height:1.3;}
+.book-author{font-size:0.85rem;color:var(--mid);margin-bottom:0.75rem;}
+.book-meta{display:flex;gap:1rem;font-size:0.78rem;color:var(--light);margin-bottom:0.75rem;}
+.stars{color:var(--gold);font-size:0.9rem;margin-bottom:0.5rem;}
+.book-status{
+  display:inline-block;font-size:0.72rem;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.07em;padding:0.2rem 0.6rem;border-radius:20px;
+}
+.status-read{background:#e8f4e8;color:#2a6e2a;}
+.status-reading{background:#fff4e0;color:#9a6000;}
+.status-wishlist{background:#f0f0f0;color:#555;}
+.book-review-preview{
+  margin-top:0.75rem;font-size:0.82rem;color:var(--mid);
+  font-style:italic;line-height:1.5;
+  border-left:3px solid var(--warm);padding-left:0.75rem;
+}
+
+/* ---- MODAL ---- */
+.overlay{
+  position:fixed;inset:0;background:rgba(20,12,5,0.6);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:1rem;
+  backdrop-filter:blur(4px);
+}
+.overlay.open{display:flex;}
+.modal{
+  background:#fff;border-radius:16px;width:100%;max-width:640px;
+  max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(20,12,5,0.3);
+  animation:slideUp 0.3s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+
+.modal-header{
+  background:linear-gradient(90deg,#0d2a4a 0%,#1565c0 100%);padding:1.5rem 2rem;display:flex;
+  justify-content:space-between;align-items:center;
+  border-radius:16px 16px 0 0;
+}
+.modal-title{font-family:'Libre Baskerville',serif;color:var(--cream);font-size:1.2rem;}
+.close-btn{background:none;border:none;color:var(--light);font-size:1.5rem;cursor:pointer;line-height:1;}
+.close-btn:hover{color:#fff;}
+
+.modal-body{padding:2rem;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.form-group{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;}
+.form-group label{font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--mid);}
+.form-group input,.form-group select,.form-group textarea{
+  padding:0.75rem 1rem;border:1.5px solid rgba(61,43,26,0.15);border-radius:8px;
+  font-family:'Karla',sans-serif;font-size:0.9rem;color:var(--brown);
+  background:#fff;transition:border-color 0.2s;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  outline:none;border-color:var(--accent);
+}
+.form-group textarea{resize:vertical;min-height:120px;}
+
+.star-select{display:flex;gap:0.3rem;font-size:1.6rem;cursor:pointer;}
+.star-select span{color:#ddd;transition:color 0.15s;user-select:none;}
+.star-select span.lit,.star-select span:hover~span.lit{color:var(--gold);}
+.star-select:hover span{color:var(--gold);}
+.star-select span:hover~span{color:#ddd;}
+
+.modal-footer{padding:1rem 2rem 1.5rem;display:flex;gap:1rem;justify-content:flex-end;}
+.btn-cancel{padding:0.75rem 1.5rem;background:var(--warm);color:var(--mid);border:none;border-radius:8px;font-family:'Karla',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;}
+.btn-save{padding:0.75rem 1.5rem;background:#1565c0;color:#fff;border:none;border-radius:8px;font-family:'Karla',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.btn-save:hover{background:#0d47a1;}
+
+/* ---- REVIEWS TAB ---- */
+.reviews-list{display:flex;flex-direction:column;gap:1.5rem;}
+.review-card{
+  background:#fff;border-radius:12px;padding:1.75rem;
+  box-shadow:0 2px 12px var(--shadow);border:1px solid rgba(61,43,26,0.07);
+}
+.review-book-title{font-family:'Libre Baskerville',serif;font-size:1.1rem;font-weight:700;}
+.review-book-author{font-size:0.85rem;color:var(--mid);margin-bottom:0.75rem;}
+.review-text{font-size:0.93rem;line-height:1.7;color:var(--brown);font-style:italic;}
+.review-meta{display:flex;justify-content:space-between;align-items:center;margin-top:1rem;}
+.review-date{font-size:0.78rem;color:var(--light);}
+
+/* ---- STATS TAB ---- */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.5rem;margin-bottom:2.5rem;}
+.stat-card{background:#fff;border-radius:12px;padding:1.75rem;box-shadow:0 2px 12px var(--shadow);text-align:center;}
+.stat-card-num{font-family:'Libre Baskerville',serif;font-size:2.5rem;color:#1565c0;}
+.stat-card-lbl{font-size:0.8rem;color:var(--mid);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.25rem;}
+.genre-chart{background:#fff;border-radius:12px;padding:1.75rem;box-shadow:0 2px 12px var(--shadow);}
+.genre-chart h3{font-family:'Libre Baskerville',serif;font-size:1.1rem;margin-bottom:1.25rem;}
+.bar-row{display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem;}
+.bar-label{width:100px;font-size:0.85rem;color:var(--mid);}
+.bar-track{flex:1;height:10px;background:var(--warm);border-radius:5px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:5px;background:#1565c0;transition:width 0.6s ease;}
+.bar-count{width:30px;font-size:0.85rem;color:var(--mid);text-align:right;}
+
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--light);}
+.empty-state .emoji{font-size:3rem;margin-bottom:1rem;}
+.empty-state p{font-size:0.95rem;}
+
+/* ---- REPORT TAB ---- */
+.report-section{max-width:860px;}
+.report-header-text{margin-bottom:2rem;}
+.report-title{font-family:'Libre Baskerville',serif;font-size:1.6rem;margin-bottom:0.5rem;color:#0d2a4a;}
+.report-subtitle{color:var(--mid);font-size:0.95rem;}
+.report-options{display:flex;flex-direction:column;gap:1.25rem;margin-bottom:2.5rem;}
+.report-card{
+  background:#fff;border-radius:12px;padding:1.5rem 1.75rem;
+  box-shadow:0 2px 12px var(--shadow);border:1px solid rgba(61,43,26,0.07);
+  display:flex;align-items:center;gap:1.5rem;
+}
+.report-card-icon{font-size:2.2rem;flex-shrink:0;}
+.report-card-info{flex:1;}
+.report-card-info h3{font-family:'Libre Baskerville',serif;font-size:1rem;margin-bottom:0.35rem;}
+.report-card-info p{font-size:0.85rem;color:var(--mid);line-height:1.6;}
+.btn-download{
+  padding:0.7rem 1.4rem;border:none;border-radius:8px;
+  font-family:'Karla',sans-serif;font-size:0.88rem;font-weight:600;
+  cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0;
+}
+.btn-csv{background:#e8f4e8;color:#2a6e2a;}
+.btn-csv:hover{background:#2a6e2a;color:#fff;transform:translateY(-1px);}
+.btn-html{background:#fff4e0;color:#9a6000;}
+.btn-html:hover{background:#9a6000;color:#fff;transform:translateY(-1px);}
+.btn-json{background:#e8eef4;color:var(--blue);}
+.btn-json:hover{background:var(--blue);color:#fff;transform:translateY(-1px);}
+
+.report-preview{background:#fff;border-radius:12px;padding:1.75rem;box-shadow:0 2px 12px var(--shadow);}
+.report-preview h3{font-family:'Libre Baskerville',serif;font-size:1.05rem;margin-bottom:1.25rem;}
+.preview-table{width:100%;border-collapse:collapse;font-size:0.83rem;}
+.preview-table th{
+  background:var(--warm);color:var(--mid);text-transform:uppercase;
+  font-size:0.7rem;letter-spacing:0.08em;padding:0.6rem 0.75rem;text-align:left;
+}
+.preview-table td{padding:0.65rem 0.75rem;border-bottom:1px solid rgba(61,43,26,0.06);color:var(--brown);}
+.preview-table tr:last-child td{border-bottom:none;}
+.preview-table tr:hover td{background:var(--cream);}
+.preview-table .td-price{font-weight:600;color:var(--accent);}
+.preview-table .td-stars{color:var(--gold);}
+
+/* ---- ADMIN AUTH ---- */
+.admin-btn{
+  padding:0.5rem 1.1rem;border-radius:20px;font-family:'Karla',sans-serif;font-size:0.8rem;
+  font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,0.35);
+  background:rgba(255,255,255,0.12);color:#fff;transition:all 0.2s;letter-spacing:0.05em;
+}
+.admin-btn:hover{background:rgba(255,255,255,0.25);}
+.admin-btn.logged-in{background:rgba(144,202,249,0.2);border-color:#90caf9;color:#90caf9;}
+.guest-badge{
+  font-size:0.7rem;color:rgba(255,255,255,0.5);letter-spacing:0.1em;
+  text-transform:uppercase;display:flex;align-items:center;gap:0.4rem;
+}
+
+/* Login Modal */
+.login-overlay{
+  position:fixed;inset:0;background:rgba(10,25,47,0.75);z-index:300;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.login-overlay.open{display:flex;}
+.login-box{
+  background:#fff;border-radius:16px;padding:2.5rem;width:100%;max-width:380px;
+  box-shadow:0 24px 80px rgba(13,42,74,0.35);animation:slideUp 0.3s ease;text-align:center;
+}
+.login-icon{font-size:2.5rem;margin-bottom:1rem;}
+.login-box h2{font-family:'Libre Baskerville',serif;font-size:1.3rem;color:#0d2a4a;margin-bottom:0.4rem;}
+.login-box p{font-size:0.85rem;color:#5a8ab0;margin-bottom:1.5rem;}
+.login-box input{
+  width:100%;padding:0.85rem 1rem;border:1.5px solid rgba(21,101,192,0.2);border-radius:8px;
+  font-family:'Karla',sans-serif;font-size:0.95rem;color:#0d2a4a;margin-bottom:1rem;
+  text-align:center;letter-spacing:0.15em;
+}
+.login-box input:focus{outline:none;border-color:#1565c0;}
+.login-submit{
+  width:100%;padding:0.85rem;background:#1565c0;color:#fff;border:none;border-radius:8px;
+  font-family:'Karla',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.2s;
+}
+.login-submit:hover{background:#0d47a1;}
+.login-error{color:#c0392b;font-size:0.82rem;margin-top:0.5rem;display:none;}
+.login-cancel{margin-top:0.75rem;background:none;border:none;color:#5a8ab0;font-size:0.85rem;cursor:pointer;font-family:'Karla',sans-serif;}
+.login-cancel:hover{color:#0d2a4a;}
+
+/* ---- RESPONSIVE ---- */
+@media(max-width:640px){
+  header{flex-direction:column;gap:1rem;text-align:center;}
+  .main{padding:1.5rem 1rem;}
+  .form-row{grid-template-columns:1fr;}
+  .tabs{overflow-x:auto;}
+  .tab-btn{padding:0.8rem 1.2rem;font-size:0.8rem;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo">Pranav's <span>Library</span></div>
+    <div class="tagline">Knowledge · Understanding · Wisdom</div>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-num" id="hdr-total">0</div><div class="stat-lbl">Books</div></div>
+    <div class="stat"><div class="stat-num" id="hdr-read">0</div><div class="stat-lbl">Read</div></div>
+    <div class="stat"><div class="stat-num" id="hdr-reading">0</div><div class="stat-lbl">Reading</div></div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;">
+    <button class="admin-btn" id="admin-btn" onclick="toggleAdmin()">🔒 Admin Login</button>
+    <span class="guest-badge" id="guest-badge">👁️ Viewing as Guest</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('books')">📚 My Books</button>
+  <button class="tab-btn" onclick="switchTab('reviews')">✍️ Reviews</button>
+  <button class="tab-btn" onclick="switchTab('stats')">📊 Statistics</button>
+  <button class="tab-btn admin-only" onclick="switchTab('report')" style="display:none;">⬇️ Download Report</button>
+</div>
+
+<div class="main">
+
+  <!-- BOOKS TAB -->
+  <div class="tab-panel active" id="tab-books">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <input type="text" id="search-input" placeholder="Search books or authors…" oninput="renderBooks()"/>
+      </div>
+      <select id="filter-genre" onchange="renderBooks()">
+        <option value="">All Genres</option>
+        <option>Fiction</option><option>Non-Fiction</option><option>Mystery</option>
+        <option>Sci-Fi</option><option>Biography</option><option>History</option>
+        <option>Children</option><option>Adolescent</option>
+        <option>AI</option><option>Philosophy</option><option>Science</option><option>Other</option>
+      </select>
+      <select id="filter-status" onchange="renderBooks()">
+        <option value="">All Status</option>
+        <option>Read</option><option>Reading</option><option>Wishlist</option>
+      </select>
+      <button class="btn-add admin-only" id="btn-add-book" onclick="openModal()" style="display:none;">+ Add Book</button>
+    </div>
+    <div class="books-grid" id="books-grid"></div>
+  </div>
+
+  <!-- REVIEWS TAB -->
+  <div class="tab-panel" id="tab-reviews">
+    <div class="reviews-list" id="reviews-list"></div>
+  </div>
+
+  <!-- STATS TAB -->
+  <div class="tab-panel" id="tab-stats">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="genre-chart">
+      <h3>Books by Genre</h3>
+      <div id="genre-bars"></div>
+    </div>
+  </div>
+
+  <!-- REPORT TAB -->
+  <div class="tab-panel" id="tab-report">
+    <div class="report-section">
+      <div class="report-header-text">
+        <h2 class="report-title">Download Your Library Report</h2>
+        <p class="report-subtitle">Export your full book collection in your preferred format.</p>
+      </div>
+
+      <div class="report-options">
+
+        <div class="report-card">
+          <div class="report-card-icon">📄</div>
+          <div class="report-card-info">
+            <h3>CSV Spreadsheet</h3>
+            <p>Export all books as a .csv file — open in Excel, Google Sheets, or any spreadsheet app. Includes all fields: title, author, genre, status, price, rating, review, notes.</p>
+          </div>
+          <button class="btn-download btn-csv" onclick="downloadCSV()">Download CSV</button>
+        </div>
+
+        <div class="report-card">
+          <div class="report-card-icon">🖨️</div>
+          <div class="report-card-info">
+            <h3>Printable HTML Report</h3>
+            <p>Generate a beautifully formatted report with your library summary, statistics, and full book list. Print it or save as PDF from your browser.</p>
+          </div>
+          <button class="btn-download btn-html" onclick="downloadHTMLReport()">Download Report</button>
+        </div>
+
+        <div class="report-card">
+          <div class="report-card-icon">📋</div>
+          <div class="report-card-info">
+            <h3>JSON Backup</h3>
+            <p>Export all your library data as a .json file — useful for backup or transferring your data to another device.</p>
+          </div>
+          <button class="btn-download btn-json" onclick="downloadJSON()">Download JSON</button>
+        </div>
+
+      </div>
+
+      <div class="report-preview">
+        <h3>Report Preview</h3>
+        <div id="report-preview-table"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeIfOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Add a New Book</span>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="f-title" placeholder="Book title"/>
+        </div>
+        <div class="form-group">
+          <label>Author *</label>
+          <input type="text" id="f-author" placeholder="Author name"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Genre</label>
+          <select id="f-genre">
+            <option>Fiction</option><option>Non-Fiction</option><option>Mystery</option>
+            <option>Sci-Fi</option><option>Biography</option><option>History</option>
+            <option>Children</option><option>Adolescent</option>
+            <option>AI</option><option>Philosophy</option><option>Science</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="f-status">
+            <option>Wishlist</option><option>Reading</option><option>Read</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Year Published</label>
+          <input type="number" id="f-year" placeholder="e.g. 2021" min="1000" max="2099"/>
+        </div>
+        <div class="form-group">
+          <label>Pages</label>
+          <input type="number" id="f-pages" placeholder="e.g. 320" min="1"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price (₹)</label>
+          <input type="number" id="f-price" placeholder="e.g. 499" min="0" step="0.01"/>
+        </div>
+        <div class="form-group">
+          <label>Purchase Location</label>
+          <input type="text" id="f-purchase" placeholder="e.g. Amazon, local bookstore"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Your Rating</label>
+        <div class="star-select" id="star-select" onclick="setRating(event)">
+          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span>
+          <span data-v="4">★</span><span data-v="5">★</span>
+        </div>
+        <input type="hidden" id="f-rating" value="0"/>
+      </div>
+      <div class="form-group">
+        <label>Book Review</label>
+        <textarea id="f-review" placeholder="Write your thoughts about this book…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Notes / Tags</label>
+        <input type="text" id="f-notes" placeholder="e.g. Favourite, Must-read, Gift idea…"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveBook()">Save Book</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="login-overlay" id="login-overlay" onclick="closeLoginIfOutside(event)">
+  <div class="login-box">
+    <div class="login-icon">🔐</div>
+    <h2>Admin Access</h2>
+    <p>Enter your password to unlock editing, adding, and downloading.</p>
+    <input type="password" id="admin-password" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()"/>
+    <button class="login-submit" onclick="checkPassword()">Unlock</button>
+    <div class="login-error" id="login-error">❌ Incorrect password. Try again.</div>
+    <button class="login-cancel" onclick="closeLoginModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ---- ADMIN AUTH ----
+// 🔑 Change this password to whatever you want!
+const ADMIN_PASSWORD = 'tintin2026';
+let isAdmin = false;
+
+function toggleAdmin(){
+  if(isAdmin){ logoutAdmin(); }
+  else { openLoginModal(); }
+}
+function openLoginModal(){
+  document.getElementById('login-overlay').classList.add('open');
+  document.getElementById('admin-password').value='';
+  document.getElementById('login-error').style.display='none';
+  setTimeout(()=>document.getElementById('admin-password').focus(),100);
+}
+function closeLoginModal(){
+  document.getElementById('login-overlay').classList.remove('open');
+}
+function closeLoginIfOutside(e){
+  if(e.target===document.getElementById('login-overlay')) closeLoginModal();
+}
+function checkPassword(){
+  const val = document.getElementById('admin-password').value;
+  if(val === ADMIN_PASSWORD){
+    isAdmin = true;
+    closeLoginModal();
+    applyAdminMode();
+  } else {
+    document.getElementById('login-error').style.display='block';
+    document.getElementById('admin-password').value='';
+    document.getElementById('admin-password').focus();
+  }
+}
+function logoutAdmin(){
+  if(!confirm('Log out of admin mode?')) return;
+  isAdmin = false;
+  applyAdminMode();
+  // Switch to books tab if on report tab
+  const reportPanel = document.getElementById('tab-report');
+  if(reportPanel.classList.contains('active')){
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-books').classList.add('active');
+    document.querySelector('.tab-btn').classList.add('active');
+    renderBooks();
+  }
+}
+function applyAdminMode(){
+  const btn = document.getElementById('admin-btn');
+  const badge = document.getElementById('guest-badge');
+  if(isAdmin){
+    btn.textContent='🔓 Admin (Logout)';
+    btn.classList.add('logged-in');
+    badge.innerHTML='✅ Editing as Admin';
+    badge.style.color='#90caf9';
+  } else {
+    btn.textContent='🔒 Admin Login';
+    btn.classList.remove('logged-in');
+    badge.innerHTML='👁️ Viewing as Guest';
+    badge.style.color='';
+  }
+  // Show/hide admin-only elements
+  document.querySelectorAll('.admin-only').forEach(el=>{
+    el.style.display = isAdmin ? '' : 'none';
+  });
+  renderBooks();
+}
+
+// ---- DATA ----
+let books = JSON.parse(localStorage.getItem('myLibrary') || '[]');
+let editingId = null;
+
+function save(){ localStorage.setItem('myLibrary', JSON.stringify(books)); }
+
+function genreClass(g){
+  const m={Fiction:'genre-fiction','Non-Fiction':'genre-nonfiction',Mystery:'genre-mystery',
+    'Sci-Fi':'genre-scifi',Biography:'genre-biography',History:'genre-history',
+    Children:'genre-children',Adolescent:'genre-adolescent',
+    AI:'genre-ai',Philosophy:'genre-philosophy',Science:'genre-science',Other:'genre-other'};
+  return m[g]||'genre-other';
+}
+function statusClass(s){
+  return s==='Read'?'status-read':s==='Reading'?'status-reading':'status-wishlist';
+}
+function stars(n){ return '★'.repeat(n)+'☆'.repeat(5-n); }
+
+// ---- RENDER BOOKS ----
+function renderBooks(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const gf = document.getElementById('filter-genre').value;
+  const sf = document.getElementById('filter-status').value;
+
+  let filtered = books.filter(b=>{
+    const matchQ = !q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
+    const matchG = !gf || b.genre===gf;
+    const matchS = !sf || b.status===sf;
+    return matchQ && matchG && matchS;
+  });
+
+  const grid = document.getElementById('books-grid');
+  if(!filtered.length){
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="emoji">📖</div><p>No books found. Add your first book!</p></div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(b=>`
+    <div class="book-card" ${isAdmin?`onclick="openModal(${b.id})"`:''}  style="${isAdmin?'cursor:pointer':'cursor:default'}">
+      <div class="book-top">
+        <span class="genre-badge ${genreClass(b.genre)}">${b.genre}</span>
+        <div class="book-actions">
+          ${isAdmin?`
+          <button class="icon-btn" title="Edit" onclick="event.stopPropagation();openModal(${b.id})">✏️</button>
+          <button class="icon-btn" title="Delete" onclick="event.stopPropagation();deleteBook(${b.id})">🗑️</button>
+          `:''}
+        </div>
+      </div>
+      <div class="book-title">${b.title}</div>
+      <div class="book-author">by ${b.author}</div>
+      <div class="book-meta">
+        ${b.year?`<span>📅 ${b.year}</span>`:''}
+        ${b.pages?`<span>📄 ${b.pages}p</span>`:''}
+        ${b.price?`<span>💰 ₹${parseFloat(b.price).toLocaleString('en-IN')}</span>`:''}
+      </div>
+      ${b.rating?`<div class="stars">${stars(b.rating)}</div>`:''}
+      <span class="book-status ${statusClass(b.status)}">${b.status}</span>
+      ${b.review?`<div class="book-review-preview">"${b.review.slice(0,100)}${b.review.length>100?'…':''}"</div>`:''}
+      ${b.notes?`<div style="margin-top:0.5rem;font-size:0.75rem;color:var(--light);">🏷️ ${b.notes}</div>`:''}
+      ${b.purchase?`<div style="margin-top:0.3rem;font-size:0.75rem;color:var(--light);">🛒 ${b.purchase}</div>`:''}
+    </div>
+  `).join('');
+
+  updateHeader();
+}
+
+// ---- RENDER REVIEWS ----
+function renderReviews(){
+  const list = document.getElementById('reviews-list');
+  const reviewed = books.filter(b=>b.review);
+  if(!reviewed.length){
+    list.innerHTML=`<div class="empty-state"><div class="emoji">✍️</div><p>No reviews yet. Add a book and write your thoughts!</p></div>`;
+    return;
+  }
+  list.innerHTML = reviewed.map(b=>`
+    <div class="review-card">
+      <div class="review-book-title">${b.title}</div>
+      <div class="review-book-author">by ${b.author} · <span class="genre-badge ${genreClass(b.genre)}" style="font-size:0.7rem">${b.genre}</span></div>
+      ${b.rating?`<div class="stars" style="margin:0.5rem 0">${stars(b.rating)}</div>`:''}
+      <div class="review-text">"${b.review}"</div>
+      <div class="review-meta">
+        <span class="book-status ${statusClass(b.status)}">${b.status}</span>
+        <span class="review-date">${b.date||''}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- RENDER STATS ----
+function renderStats(){
+  const total = books.length;
+  const read = books.filter(b=>b.status==='Read').length;
+  const reading = books.filter(b=>b.status==='Reading').length;
+  const wishlist = books.filter(b=>b.status==='Wishlist').length;
+  const avgRating = books.filter(b=>b.rating).reduce((s,b)=>s+b.rating,0) / (books.filter(b=>b.rating).length||1);
+
+  const totalSpend = books.filter(b=>b.price).reduce((s,b)=>s+parseFloat(b.price),0);
+
+  document.getElementById('stats-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-card-num">${total}</div><div class="stat-card-lbl">Total Books</div></div>
+    <div class="stat-card"><div class="stat-card-num">${read}</div><div class="stat-card-lbl">Books Read</div></div>
+    <div class="stat-card"><div class="stat-card-num">${reading}</div><div class="stat-card-lbl">Currently Reading</div></div>
+    <div class="stat-card"><div class="stat-card-num">${wishlist}</div><div class="stat-card-lbl">Wishlist</div></div>
+    <div class="stat-card"><div class="stat-card-num">${books.filter(b=>b.review).length}</div><div class="stat-card-lbl">Reviews Written</div></div>
+    <div class="stat-card"><div class="stat-card-num">${total?avgRating.toFixed(1):'—'}</div><div class="stat-card-lbl">Avg Rating</div></div>
+    <div class="stat-card"><div class="stat-card-num" style="font-size:1.6rem">${totalSpend?'₹'+totalSpend.toLocaleString('en-IN'):'—'}</div><div class="stat-card-lbl">Total Spent</div></div>
+  `;
+
+  const genres=['Fiction','Non-Fiction','Mystery','Sci-Fi','Biography','History','Children','Adolescent','AI','Philosophy','Science','Other'];
+  const max = Math.max(...genres.map(g=>books.filter(b=>b.genre===g).length),1);
+  document.getElementById('genre-bars').innerHTML = genres.map(g=>{
+    const count = books.filter(b=>b.genre===g).length;
+    return `<div class="bar-row">
+      <div class="bar-label">${g}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${count/max*100}%"></div></div>
+      <div class="bar-count">${count}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateHeader(){
+  document.getElementById('hdr-total').textContent = books.length;
+  document.getElementById('hdr-read').textContent = books.filter(b=>b.status==='Read').length;
+  document.getElementById('hdr-reading').textContent = books.filter(b=>b.status==='Reading').length;
+}
+
+// ---- TABS ----
+function switchTab(tab){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  event.target.classList.add('active');
+  if(tab==='reviews') renderReviews();
+  if(tab==='stats') renderStats();
+  if(tab==='books') renderBooks();
+  if(tab==='report') renderReportPreview();
+}
+
+// ---- MODAL ----
+function openModal(id=null){
+  if(!isAdmin) return;
+  editingId = id;
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-title').textContent = id ? 'Edit Book' : 'Add a New Book';
+  // reset
+  ['f-title','f-author','f-year','f-pages','f-price','f-purchase','f-review','f-notes'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('f-genre').value='Fiction';
+  document.getElementById('f-status').value='Wishlist';
+  setRatingDisplay(0);
+
+  if(id){
+    const b = books.find(x=>x.id===id);
+    if(b){
+      document.getElementById('f-title').value=b.title||'';
+      document.getElementById('f-author').value=b.author||'';
+      document.getElementById('f-genre').value=b.genre||'Fiction';
+      document.getElementById('f-status').value=b.status||'Wishlist';
+      document.getElementById('f-year').value=b.year||'';
+      document.getElementById('f-pages').value=b.pages||'';
+      document.getElementById('f-price').value=b.price||'';
+      document.getElementById('f-purchase').value=b.purchase||'';
+      document.getElementById('f-review').value=b.review||'';
+      document.getElementById('f-notes').value=b.notes||'';
+      setRatingDisplay(b.rating||0);
+    }
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+function closeIfOutside(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
+
+function saveBook(){
+  const title = document.getElementById('f-title').value.trim();
+  const author = document.getElementById('f-author').value.trim();
+  if(!title||!author){ alert('Please enter at least a title and author.'); return; }
+
+  const data = {
+    title, author,
+    genre: document.getElementById('f-genre').value,
+    status: document.getElementById('f-status').value,
+    year: document.getElementById('f-year').value,
+    pages: document.getElementById('f-pages').value,
+    price: document.getElementById('f-price').value,
+    purchase: document.getElementById('f-purchase').value.trim(),
+    rating: parseInt(document.getElementById('f-rating').value)||0,
+    review: document.getElementById('f-review').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+    date: new Date().toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'})
+  };
+
+  if(editingId){
+    const idx = books.findIndex(b=>b.id===editingId);
+    books[idx] = {...books[idx], ...data};
+  } else {
+    data.id = Date.now();
+    books.unshift(data);
+  }
+  save(); closeModal(); renderBooks();
+}
+
+function deleteBook(id){
+  if(!isAdmin) return;
+  if(!confirm('Remove this book from your library?')) return;
+  books = books.filter(b=>b.id!==id);
+  save(); renderBooks();
+}
+
+// ---- STAR RATING ----
+function setRating(e){
+  const star = e.target.closest('[data-v]');
+  if(!star) return;
+  setRatingDisplay(parseInt(star.dataset.v));
+}
+function setRatingDisplay(n){
+  document.getElementById('f-rating').value=n;
+  document.querySelectorAll('#star-select span').forEach(s=>{
+    s.style.color = parseInt(s.dataset.v)<=n ? 'var(--gold)' : '#ddd';
+  });
+}
+
+// ---- SEED DATA ----
+if(!books.length){
+  books=[
+    {id:1,title:'The Midnight Library',author:'Matt Haig',genre:'Fiction',status:'Read',year:'2020',pages:'288',price:'399',purchase:'Amazon',rating:5,review:'A beautiful, life-affirming novel about choices and regret. Deeply moving and surprisingly funny.',notes:'Favourite',date:'Jan 2024'},
+    {id:2,title:'Sapiens',author:'Yuval Noah Harari',genre:'History',status:'Read',year:'2011',pages:'443',price:'549',purchase:'Crossword',rating:4,review:'Mind-expanding view of human history. Makes you question everything about civilisation.',notes:'',date:'Feb 2024'},
+    {id:3,title:'Project Hail Mary',author:'Andy Weir',genre:'Sci-Fi',status:'Reading',year:'2021',pages:'476',price:'499',purchase:'Flipkart',rating:0,review:'',notes:'Page-turner',date:'Mar 2024'},
+    {id:4,title:'Educated',author:'Tara Westover',genre:'Biography',status:'Wishlist',year:'2018',pages:'334',price:'',purchase:'',rating:0,review:'',notes:'',date:'Mar 2024'},
+  ];
+  save();
+}
+
+// ---- REPORT PREVIEW ----
+function renderReportPreview(){
+  const wrap = document.getElementById('report-preview-table');
+  if(!books.length){ wrap.innerHTML='<p style="color:var(--light);font-size:0.9rem;">No books yet.</p>'; return; }
+  wrap.innerHTML=`<table class="preview-table">
+    <thead><tr>
+      <th>#</th><th>Title</th><th>Author</th><th>Genre</th>
+      <th>Status</th><th>Year</th><th>Pages</th><th>Price</th><th>Rating</th><th>Purchased From</th>
+    </tr></thead>
+    <tbody>${books.map((b,i)=>`<tr>
+      <td>${i+1}</td>
+      <td><strong>${b.title}</strong></td>
+      <td>${b.author}</td>
+      <td>${b.genre}</td>
+      <td>${b.status}</td>
+      <td>${b.year||'—'}</td>
+      <td>${b.pages||'—'}</td>
+      <td class="td-price">${b.price?'₹'+parseFloat(b.price).toLocaleString('en-IN'):'—'}</td>
+      <td class="td-stars">${b.rating?'★'.repeat(b.rating):'—'}</td>
+      <td>${b.purchase||'—'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ---- DOWNLOAD CSV ----
+function downloadCSV(){
+  if(!isAdmin) return;
+  const headers = ['#','Title','Author','Genre','Status','Year','Pages','Price (INR)','Rating','Purchased From','Review','Notes','Date Added'];
+  const rows = books.map((b,i)=>[
+    i+1, `"${(b.title||'').replace(/"/g,'""')}"`, `"${(b.author||'').replace(/"/g,'""')}"`,
+    b.genre, b.status, b.year||'', b.pages||'',
+    b.price||'', b.rating||'', `"${(b.purchase||'').replace(/"/g,'""')}"`,
+    `"${(b.review||'').replace(/"/g,'""')}"`, `"${(b.notes||'').replace(/"/g,'""')}"`, b.date||''
+  ]);
+  const csv = [headers, ...rows].map(r=>r.join(',')).join('\n');
+  triggerDownload('data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv), 'my-library.csv');
+}
+
+// ---- DOWNLOAD JSON ----
+function downloadJSON(){
+  if(!isAdmin) return;
+  const json = JSON.stringify(books, null, 2);
+  triggerDownload('data:application/json;charset=utf-8,'+encodeURIComponent(json), 'my-library-backup.json');
+}
+
+// ---- DOWNLOAD HTML REPORT ----
+function downloadHTMLReport(){
+  if(!isAdmin) return;
+  const total = books.length;
+  const read = books.filter(b=>b.status==='Read').length;
+  const reading = books.filter(b=>b.status==='Reading').length;
+  const wishlist = books.filter(b=>b.status==='Wishlist').length;
+  const totalSpend = books.filter(b=>b.price).reduce((s,b)=>s+parseFloat(b.price),0);
+  const avgRating = books.filter(b=>b.rating).reduce((s,b)=>s+b.rating,0)/(books.filter(b=>b.rating).length||1);
+  const today = new Date().toLocaleDateString('en-IN',{year:'numeric',month:'long',day:'numeric'});
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<title>Pranav's Library Report</title>
+<style>
+  body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:0 2rem;color:#2a1a0e;background:#fff;}
+  h1{font-size:2rem;border-bottom:3px solid #b85c2c;padding-bottom:0.5rem;color:#3d2b1a;}
+  .meta{color:#888;font-size:0.85rem;margin-bottom:2rem;}
+  .stats{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;}
+  .sbox{background:#faf6ef;border:1px solid #e0d4c0;border-radius:8px;padding:1rem 1.5rem;text-align:center;min-width:100px;}
+  .sbox .n{font-size:1.8rem;font-weight:bold;color:#b85c2c;}
+  .sbox .l{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#7a5c40;}
+  table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:1.5rem;}
+  th{background:#3d2b1a;color:#faf6ef;padding:0.6rem 0.75rem;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.07em;}
+  td{padding:0.65rem 0.75rem;border-bottom:1px solid #e8e0d0;}
+  tr:nth-child(even) td{background:#fdf9f4;}
+  .review-section{margin-top:3rem;}
+  .review-block{background:#faf6ef;border-left:4px solid #b85c2c;padding:1rem 1.25rem;margin-bottom:1.25rem;border-radius:0 8px 8px 0;}
+  .review-block h4{margin:0 0 0.4rem;font-size:1rem;}
+  .review-block p{margin:0;font-style:italic;color:#5a3e28;font-size:0.9rem;line-height:1.6;}
+  @media print{body{margin:0;padding:1rem;}}
+</style></head><body>
+<h1>📚 Pranav's Library Report</h1>
+<div style="font-size:0.8rem;color:#b85c2c;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.5rem;">Knowledge · Understanding · Wisdom</div>
+<div class="meta">Generated on ${today} &nbsp;·&nbsp; ${total} books total</div>
+<div class="stats">
+  <div class="sbox"><div class="n">${total}</div><div class="l">Total</div></div>
+  <div class="sbox"><div class="n">${read}</div><div class="l">Read</div></div>
+  <div class="sbox"><div class="n">${reading}</div><div class="l">Reading</div></div>
+  <div class="sbox"><div class="n">${wishlist}</div><div class="l">Wishlist</div></div>
+  <div class="sbox"><div class="n">${total?avgRating.toFixed(1):'—'}</div><div class="l">Avg Rating</div></div>
+  <div class="sbox"><div class="n">${totalSpend?'₹'+totalSpend.toLocaleString('en-IN'):'—'}</div><div class="l">Total Spent</div></div>
+</div>
+<h2>All Books</h2>
+<table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Genre</th><th>Status</th><th>Year</th><th>Pages</th><th>Price</th><th>Rating</th><th>Purchased From</th></tr></thead>
+<tbody>${books.map((b,i)=>`<tr>
+  <td>${i+1}</td><td><strong>${b.title}</strong></td><td>${b.author}</td><td>${b.genre}</td>
+  <td>${b.status}</td><td>${b.year||'—'}</td><td>${b.pages||'—'}</td>
+  <td>${b.price?'₹'+parseFloat(b.price).toLocaleString('en-IN'):'—'}</td>
+  <td>${b.rating?'★'.repeat(b.rating)+'☆'.repeat(5-b.rating):'—'}</td>
+  <td>${b.purchase||'—'}</td>
+</tr>`).join('')}</tbody></table>
+${books.filter(b=>b.review).length?`
+<div class="review-section">
+<h2>Book Reviews</h2>
+${books.filter(b=>b.review).map(b=>`
+<div class="review-block">
+  <h4>${b.title} <span style="font-weight:normal;color:#888">by ${b.author}</span> ${b.rating?'— '+'★'.repeat(b.rating):''}</h4>
+  <p>"${b.review}"</p>
+</div>`).join('')}
+</div>`:''}
+</body></html>`;
+
+  triggerDownload('data:text/html;charset=utf-8,'+encodeURIComponent(html), 'my-library-report.html');
+}
+
+function triggerDownload(dataURI, filename){
+  const a = document.createElement('a');
+  a.href = dataURI; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ---- INIT ----
+renderBooks();
+</script>
+</body>
+</html>
