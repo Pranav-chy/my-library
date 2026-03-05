@@ -501,15 +501,29 @@ select:focus{outline:none;border-color:var(--accent);}
   </div>
 </div>
 
-<script>
-// ---- ADMIN AUTH ----
-// 🔑 Change this password to whatever you want!
-const ADMIN_PASSWORD = 'tintin2026';
-let isAdmin = false;
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-function toggleAdmin(){
-  if(isAdmin){ logoutAdmin(); }
-  else { openLoginModal(); }
+// ---- FIREBASE CONFIG ----
+const firebaseConfig = {
+  apiKey: "AIzaSyDaR2-mOQ1Lmy48wI1SqJY-sfXI710zykk",
+  authDomain: "pranavs-library.firebaseapp.com",
+  projectId: "pranavs-library",
+  storageBucket: "pranavs-library.firebasestorage.app",
+  messagingSenderId: "555494644447",
+  appId: "1:555494644447:web:9bfeb6cd64bf6d9174276a"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const booksCol = collection(db, 'books');
+
+// ---- ADMIN AUTH ----
+const ADMIN_PASSWORD = 'pranav2024';
+let isAdmin = false;
+window.toggleAdmin = function(){
+  if(isAdmin){ logoutAdmin(); } else { openLoginModal(); }
 }
 function openLoginModal(){
   document.getElementById('login-overlay').classList.add('open');
@@ -517,13 +531,13 @@ function openLoginModal(){
   document.getElementById('login-error').style.display='none';
   setTimeout(()=>document.getElementById('admin-password').focus(),100);
 }
-function closeLoginModal(){
+window.closeLoginModal = function(){
   document.getElementById('login-overlay').classList.remove('open');
 }
-function closeLoginIfOutside(e){
+window.closeLoginIfOutside = function(e){
   if(e.target===document.getElementById('login-overlay')) closeLoginModal();
 }
-function checkPassword(){
+window.checkPassword = function(){
   const val = document.getElementById('admin-password').value;
   if(val === ADMIN_PASSWORD){
     isAdmin = true;
@@ -539,7 +553,6 @@ function logoutAdmin(){
   if(!confirm('Log out of admin mode?')) return;
   isAdmin = false;
   applyAdminMode();
-  // Switch to books tab if on report tab
   const reportPanel = document.getElementById('tab-report');
   if(reportPanel.classList.contains('active')){
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
@@ -563,7 +576,6 @@ function applyAdminMode(){
     badge.innerHTML='👁️ Viewing as Guest';
     badge.style.color='';
   }
-  // Show/hide admin-only elements
   document.querySelectorAll('.admin-only').forEach(el=>{
     el.style.display = isAdmin ? '' : 'none';
   });
@@ -571,10 +583,25 @@ function applyAdminMode(){
 }
 
 // ---- DATA ----
-let books = JSON.parse(localStorage.getItem('myLibrary') || '[]');
+let books = [];
 let editingId = null;
 
-function save(){ localStorage.setItem('myLibrary', JSON.stringify(books)); }
+// Show loading state
+document.getElementById('books-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="emoji">⏳</div><p>Loading your library…</p></div>`;
+
+// Live listener — updates in real time for all users
+onSnapshot(booksCol, (snapshot) => {
+  books = snapshot.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+  books.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  renderBooks();
+  // refresh whichever tab is active
+  const active = document.querySelector('.tab-panel.active');
+  if(active){
+    if(active.id==='tab-reviews') renderReviews();
+    if(active.id==='tab-stats') renderStats();
+    if(active.id==='tab-report') renderReportPreview();
+  }
+});
 
 function genreClass(g){
   const m={Fiction:'genre-fiction','Non-Fiction':'genre-nonfiction',Mystery:'genre-mystery',
@@ -590,30 +617,28 @@ function stars(n){ return '★'.repeat(n)+'☆'.repeat(5-n); }
 
 // ---- RENDER BOOKS ----
 function renderBooks(){
-  const q = document.getElementById('search-input').value.toLowerCase();
+  const q = (document.getElementById('search-input').value||'').toLowerCase();
   const gf = document.getElementById('filter-genre').value;
   const sf = document.getElementById('filter-status').value;
-
   let filtered = books.filter(b=>{
-    const matchQ = !q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
+    const matchQ = !q || (b.title||'').toLowerCase().includes(q) || (b.author||'').toLowerCase().includes(q);
     const matchG = !gf || b.genre===gf;
     const matchS = !sf || b.status===sf;
     return matchQ && matchG && matchS;
   });
-
   const grid = document.getElementById('books-grid');
   if(!filtered.length){
-    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="emoji">📖</div><p>No books found. Add your first book!</p></div>`;
-    return;
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="emoji">📖</div><p>No books found. ${isAdmin?'Add your first book!':'Check back soon!'}</p></div>`;
+    updateHeader(); return;
   }
   grid.innerHTML = filtered.map(b=>`
-    <div class="book-card" ${isAdmin?`onclick="openModal(${b.id})"`:''}  style="${isAdmin?'cursor:pointer':'cursor:default'}">
+    <div class="book-card" ${isAdmin?`onclick="openModal('${b.firestoreId}')"`:''}  style="${isAdmin?'cursor:pointer':'cursor:default'}">
       <div class="book-top">
         <span class="genre-badge ${genreClass(b.genre)}">${b.genre}</span>
         <div class="book-actions">
           ${isAdmin?`
-          <button class="icon-btn" title="Edit" onclick="event.stopPropagation();openModal(${b.id})">✏️</button>
-          <button class="icon-btn" title="Delete" onclick="event.stopPropagation();deleteBook(${b.id})">🗑️</button>
+          <button class="icon-btn" title="Edit" onclick="event.stopPropagation();openModal('${b.firestoreId}')">✏️</button>
+          <button class="icon-btn" title="Delete" onclick="event.stopPropagation();deleteBook('${b.firestoreId}')">🗑️</button>
           `:''}
         </div>
       </div>
@@ -631,7 +656,6 @@ function renderBooks(){
       ${b.purchase?`<div style="margin-top:0.3rem;font-size:0.75rem;color:var(--light);">🛒 ${b.purchase}</div>`:''}
     </div>
   `).join('');
-
   updateHeader();
 }
 
@@ -640,8 +664,7 @@ function renderReviews(){
   const list = document.getElementById('reviews-list');
   const reviewed = books.filter(b=>b.review);
   if(!reviewed.length){
-    list.innerHTML=`<div class="empty-state"><div class="emoji">✍️</div><p>No reviews yet. Add a book and write your thoughts!</p></div>`;
-    return;
+    list.innerHTML=`<div class="empty-state"><div class="emoji">✍️</div><p>No reviews yet.</p></div>`; return;
   }
   list.innerHTML = reviewed.map(b=>`
     <div class="review-card">
@@ -659,14 +682,12 @@ function renderReviews(){
 
 // ---- RENDER STATS ----
 function renderStats(){
-  const total = books.length;
-  const read = books.filter(b=>b.status==='Read').length;
-  const reading = books.filter(b=>b.status==='Reading').length;
-  const wishlist = books.filter(b=>b.status==='Wishlist').length;
-  const avgRating = books.filter(b=>b.rating).reduce((s,b)=>s+b.rating,0) / (books.filter(b=>b.rating).length||1);
-
-  const totalSpend = books.filter(b=>b.price).reduce((s,b)=>s+parseFloat(b.price),0);
-
+  const total=books.length;
+  const read=books.filter(b=>b.status==='Read').length;
+  const reading=books.filter(b=>b.status==='Reading').length;
+  const wishlist=books.filter(b=>b.status==='Wishlist').length;
+  const avgRating=books.filter(b=>b.rating).reduce((s,b)=>s+b.rating,0)/(books.filter(b=>b.rating).length||1);
+  const totalSpend=books.filter(b=>b.price).reduce((s,b)=>s+parseFloat(b.price),0);
   document.getElementById('stats-grid').innerHTML=`
     <div class="stat-card"><div class="stat-card-num">${total}</div><div class="stat-card-lbl">Total Books</div></div>
     <div class="stat-card"><div class="stat-card-num">${read}</div><div class="stat-card-lbl">Books Read</div></div>
@@ -676,27 +697,22 @@ function renderStats(){
     <div class="stat-card"><div class="stat-card-num">${total?avgRating.toFixed(1):'—'}</div><div class="stat-card-lbl">Avg Rating</div></div>
     <div class="stat-card"><div class="stat-card-num" style="font-size:1.6rem">${totalSpend?'₹'+totalSpend.toLocaleString('en-IN'):'—'}</div><div class="stat-card-lbl">Total Spent</div></div>
   `;
-
   const genres=['Fiction','Non-Fiction','Mystery','Sci-Fi','Biography','History','Children','Adolescent','AI','Philosophy','Science','Other'];
-  const max = Math.max(...genres.map(g=>books.filter(b=>b.genre===g).length),1);
-  document.getElementById('genre-bars').innerHTML = genres.map(g=>{
-    const count = books.filter(b=>b.genre===g).length;
-    return `<div class="bar-row">
-      <div class="bar-label">${g}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${count/max*100}%"></div></div>
-      <div class="bar-count">${count}</div>
-    </div>`;
+  const max=Math.max(...genres.map(g=>books.filter(b=>b.genre===g).length),1);
+  document.getElementById('genre-bars').innerHTML=genres.map(g=>{
+    const count=books.filter(b=>b.genre===g).length;
+    return `<div class="bar-row"><div class="bar-label">${g}</div><div class="bar-track"><div class="bar-fill" style="width:${count/max*100}%"></div></div><div class="bar-count">${count}</div></div>`;
   }).join('');
 }
 
 function updateHeader(){
-  document.getElementById('hdr-total').textContent = books.length;
-  document.getElementById('hdr-read').textContent = books.filter(b=>b.status==='Read').length;
-  document.getElementById('hdr-reading').textContent = books.filter(b=>b.status==='Reading').length;
+  document.getElementById('hdr-total').textContent=books.length;
+  document.getElementById('hdr-read').textContent=books.filter(b=>b.status==='Read').length;
+  document.getElementById('hdr-reading').textContent=books.filter(b=>b.status==='Reading').length;
 }
 
 // ---- TABS ----
-function switchTab(tab){
+window.switchTab = function(tab){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
@@ -708,19 +724,16 @@ function switchTab(tab){
 }
 
 // ---- MODAL ----
-function openModal(id=null){
+window.openModal = function(firestoreId=null){
   if(!isAdmin) return;
-  editingId = id;
-  const modal = document.getElementById('modal');
-  document.getElementById('modal-title').textContent = id ? 'Edit Book' : 'Add a New Book';
-  // reset
+  editingId = firestoreId;
+  document.getElementById('modal-title').textContent = firestoreId ? 'Edit Book' : 'Add a New Book';
   ['f-title','f-author','f-year','f-pages','f-price','f-purchase','f-review','f-notes'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('f-genre').value='Fiction';
   document.getElementById('f-status').value='Wishlist';
   setRatingDisplay(0);
-
-  if(id){
-    const b = books.find(x=>x.id===id);
+  if(firestoreId){
+    const b = books.find(x=>x.firestoreId===firestoreId);
     if(b){
       document.getElementById('f-title').value=b.title||'';
       document.getElementById('f-author').value=b.author||'';
@@ -737,15 +750,15 @@ function openModal(id=null){
   }
   document.getElementById('overlay').classList.add('open');
 }
-function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
-function closeIfOutside(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
+window.closeModal = function(){ document.getElementById('overlay').classList.remove('open'); }
+window.closeIfOutside = function(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
 
-function saveBook(){
-  const title = document.getElementById('f-title').value.trim();
-  const author = document.getElementById('f-author').value.trim();
+window.saveBook = async function(){
+  if(!isAdmin) return;
+  const title=document.getElementById('f-title').value.trim();
+  const author=document.getElementById('f-author').value.trim();
   if(!title||!author){ alert('Please enter at least a title and author.'); return; }
-
-  const data = {
+  const data={
     title, author,
     genre: document.getElementById('f-genre').value,
     status: document.getElementById('f-status').value,
@@ -758,65 +771,46 @@ function saveBook(){
     notes: document.getElementById('f-notes').value.trim(),
     date: new Date().toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'})
   };
-
-  if(editingId){
-    const idx = books.findIndex(b=>b.id===editingId);
-    books[idx] = {...books[idx], ...data};
-  } else {
-    data.id = Date.now();
-    books.unshift(data);
-  }
-  save(); closeModal(); renderBooks();
+  try {
+    if(editingId){
+      await updateDoc(doc(db,'books',editingId), data);
+    } else {
+      data.createdAt = Date.now();
+      await addDoc(booksCol, data);
+    }
+    closeModal();
+  } catch(e){ alert('Error saving: '+e.message); }
 }
 
-function deleteBook(id){
+window.deleteBook = async function(firestoreId){
   if(!isAdmin) return;
   if(!confirm('Remove this book from your library?')) return;
-  books = books.filter(b=>b.id!==id);
-  save(); renderBooks();
+  try { await deleteDoc(doc(db,'books',firestoreId)); }
+  catch(e){ alert('Error deleting: '+e.message); }
 }
 
 // ---- STAR RATING ----
-function setRating(e){
-  const star = e.target.closest('[data-v]');
+window.setRating = function(e){
+  const star=e.target.closest('[data-v]');
   if(!star) return;
   setRatingDisplay(parseInt(star.dataset.v));
 }
 function setRatingDisplay(n){
   document.getElementById('f-rating').value=n;
   document.querySelectorAll('#star-select span').forEach(s=>{
-    s.style.color = parseInt(s.dataset.v)<=n ? 'var(--gold)' : '#ddd';
+    s.style.color=parseInt(s.dataset.v)<=n?'var(--gold)':'#ddd';
   });
-}
-
-// ---- SEED DATA ----
-if(!books.length){
-  books=[
-    {id:1,title:'The Midnight Library',author:'Matt Haig',genre:'Fiction',status:'Read',year:'2020',pages:'288',price:'399',purchase:'Amazon',rating:5,review:'A beautiful, life-affirming novel about choices and regret. Deeply moving and surprisingly funny.',notes:'Favourite',date:'Jan 2024'},
-    {id:2,title:'Sapiens',author:'Yuval Noah Harari',genre:'History',status:'Read',year:'2011',pages:'443',price:'549',purchase:'Crossword',rating:4,review:'Mind-expanding view of human history. Makes you question everything about civilisation.',notes:'',date:'Feb 2024'},
-    {id:3,title:'Project Hail Mary',author:'Andy Weir',genre:'Sci-Fi',status:'Reading',year:'2021',pages:'476',price:'499',purchase:'Flipkart',rating:0,review:'',notes:'Page-turner',date:'Mar 2024'},
-    {id:4,title:'Educated',author:'Tara Westover',genre:'Biography',status:'Wishlist',year:'2018',pages:'334',price:'',purchase:'',rating:0,review:'',notes:'',date:'Mar 2024'},
-  ];
-  save();
 }
 
 // ---- REPORT PREVIEW ----
 function renderReportPreview(){
-  const wrap = document.getElementById('report-preview-table');
+  const wrap=document.getElementById('report-preview-table');
   if(!books.length){ wrap.innerHTML='<p style="color:var(--light);font-size:0.9rem;">No books yet.</p>'; return; }
   wrap.innerHTML=`<table class="preview-table">
-    <thead><tr>
-      <th>#</th><th>Title</th><th>Author</th><th>Genre</th>
-      <th>Status</th><th>Year</th><th>Pages</th><th>Price</th><th>Rating</th><th>Purchased From</th>
-    </tr></thead>
+    <thead><tr><th>#</th><th>Title</th><th>Author</th><th>Genre</th><th>Status</th><th>Year</th><th>Pages</th><th>Price</th><th>Rating</th><th>Purchased From</th></tr></thead>
     <tbody>${books.map((b,i)=>`<tr>
-      <td>${i+1}</td>
-      <td><strong>${b.title}</strong></td>
-      <td>${b.author}</td>
-      <td>${b.genre}</td>
-      <td>${b.status}</td>
-      <td>${b.year||'—'}</td>
-      <td>${b.pages||'—'}</td>
+      <td>${i+1}</td><td><strong>${b.title}</strong></td><td>${b.author}</td><td>${b.genre}</td>
+      <td>${b.status}</td><td>${b.year||'—'}</td><td>${b.pages||'—'}</td>
       <td class="td-price">${b.price?'₹'+parseFloat(b.price).toLocaleString('en-IN'):'—'}</td>
       <td class="td-stars">${b.rating?'★'.repeat(b.rating):'—'}</td>
       <td>${b.purchase||'—'}</td>
@@ -825,60 +819,48 @@ function renderReportPreview(){
 }
 
 // ---- DOWNLOAD CSV ----
-function downloadCSV(){
+window.downloadCSV = function(){
   if(!isAdmin) return;
-  const headers = ['#','Title','Author','Genre','Status','Year','Pages','Price (INR)','Rating','Purchased From','Review','Notes','Date Added'];
-  const rows = books.map((b,i)=>[
-    i+1, `"${(b.title||'').replace(/"/g,'""')}"`, `"${(b.author||'').replace(/"/g,'""')}"`,
-    b.genre, b.status, b.year||'', b.pages||'',
-    b.price||'', b.rating||'', `"${(b.purchase||'').replace(/"/g,'""')}"`,
-    `"${(b.review||'').replace(/"/g,'""')}"`, `"${(b.notes||'').replace(/"/g,'""')}"`, b.date||''
+  const headers=['#','Title','Author','Genre','Status','Year','Pages','Price (INR)','Rating','Purchased From','Review','Notes','Date Added'];
+  const rows=books.map((b,i)=>[
+    i+1,`"${(b.title||'').replace(/"/g,'""')}"`,`"${(b.author||'').replace(/"/g,'""')}"`,
+    b.genre,b.status,b.year||'',b.pages||'',b.price||'',b.rating||'',
+    `"${(b.purchase||'').replace(/"/g,'""')}"`,`"${(b.review||'').replace(/"/g,'""')}"`,
+    `"${(b.notes||'').replace(/"/g,'""')}"`,b.date||''
   ]);
-  const csv = [headers, ...rows].map(r=>r.join(',')).join('\n');
-  triggerDownload('data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv), 'my-library.csv');
+  const csv=[headers,...rows].map(r=>r.join(',')).join('\n');
+  triggerDownload('data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv),'my-library.csv');
 }
 
 // ---- DOWNLOAD JSON ----
-function downloadJSON(){
+window.downloadJSON = function(){
   if(!isAdmin) return;
-  const json = JSON.stringify(books, null, 2);
-  triggerDownload('data:application/json;charset=utf-8,'+encodeURIComponent(json), 'my-library-backup.json');
+  triggerDownload('data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(books,null,2)),'my-library-backup.json');
 }
 
 // ---- DOWNLOAD HTML REPORT ----
-function downloadHTMLReport(){
+window.downloadHTMLReport = function(){
   if(!isAdmin) return;
-  const total = books.length;
-  const read = books.filter(b=>b.status==='Read').length;
-  const reading = books.filter(b=>b.status==='Reading').length;
-  const wishlist = books.filter(b=>b.status==='Wishlist').length;
-  const totalSpend = books.filter(b=>b.price).reduce((s,b)=>s+parseFloat(b.price),0);
-  const avgRating = books.filter(b=>b.rating).reduce((s,b)=>s+b.rating,0)/(books.filter(b=>b.rating).length||1);
-  const today = new Date().toLocaleDateString('en-IN',{year:'numeric',month:'long',day:'numeric'});
-
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
-<title>Pranav's Library Report</title>
-<style>
-  body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:0 2rem;color:#2a1a0e;background:#fff;}
-  h1{font-size:2rem;border-bottom:3px solid #b85c2c;padding-bottom:0.5rem;color:#3d2b1a;}
-  .meta{color:#888;font-size:0.85rem;margin-bottom:2rem;}
-  .stats{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;}
-  .sbox{background:#faf6ef;border:1px solid #e0d4c0;border-radius:8px;padding:1rem 1.5rem;text-align:center;min-width:100px;}
-  .sbox .n{font-size:1.8rem;font-weight:bold;color:#b85c2c;}
-  .sbox .l{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#7a5c40;}
-  table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:1.5rem;}
-  th{background:#3d2b1a;color:#faf6ef;padding:0.6rem 0.75rem;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.07em;}
-  td{padding:0.65rem 0.75rem;border-bottom:1px solid #e8e0d0;}
-  tr:nth-child(even) td{background:#fdf9f4;}
-  .review-section{margin-top:3rem;}
-  .review-block{background:#faf6ef;border-left:4px solid #b85c2c;padding:1rem 1.25rem;margin-bottom:1.25rem;border-radius:0 8px 8px 0;}
-  .review-block h4{margin:0 0 0.4rem;font-size:1rem;}
-  .review-block p{margin:0;font-style:italic;color:#5a3e28;font-size:0.9rem;line-height:1.6;}
-  @media print{body{margin:0;padding:1rem;}}
-</style></head><body>
+  const total=books.length,read=books.filter(b=>b.status==='Read').length,
+    reading=books.filter(b=>b.status==='Reading').length,wishlist=books.filter(b=>b.status==='Wishlist').length,
+    totalSpend=books.filter(b=>b.price).reduce((s,b)=>s+parseFloat(b.price),0),
+    avgRating=books.filter(b=>b.rating).reduce((s,b)=>s+b.rating,0)/(books.filter(b=>b.rating).length||1),
+    today=new Date().toLocaleDateString('en-IN',{year:'numeric',month:'long',day:'numeric'});
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Pranav's Library Report</title>
+<style>body{font-family:Georgia,serif;max-width:900px;margin:40px auto;padding:0 2rem;color:#0d2a4a;}
+h1{font-size:2rem;border-bottom:3px solid #1565c0;padding-bottom:0.5rem;}
+.meta{color:#888;font-size:0.85rem;margin-bottom:2rem;}
+.stats{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;}
+.sbox{background:#f0f6ff;border:1px solid #ddeaf8;border-radius:8px;padding:1rem 1.5rem;text-align:center;min-width:100px;}
+.sbox .n{font-size:1.8rem;font-weight:bold;color:#1565c0;}.sbox .l{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#2d6aa0;}
+table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:1.5rem;}
+th{background:#0d2a4a;color:#fff;padding:0.6rem 0.75rem;text-align:left;font-size:0.75rem;text-transform:uppercase;}
+td{padding:0.65rem 0.75rem;border-bottom:1px solid #ddeaf8;}tr:nth-child(even) td{background:#f0f6ff;}
+.review-block{background:#f0f6ff;border-left:4px solid #1565c0;padding:1rem 1.25rem;margin-bottom:1.25rem;border-radius:0 8px 8px 0;}
+@media print{body{margin:0;padding:1rem;}}</style></head><body>
 <h1>📚 Pranav's Library Report</h1>
-<div style="font-size:0.8rem;color:#b85c2c;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.5rem;">Knowledge · Understanding · Wisdom</div>
-<div class="meta">Generated on ${today} &nbsp;·&nbsp; ${total} books total</div>
+<div style="font-size:0.8rem;color:#1565c0;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.5rem;">Knowledge · Understanding · Wisdom</div>
+<div class="meta">Generated on ${today} · ${total} books total</div>
 <div class="stats">
   <div class="sbox"><div class="n">${total}</div><div class="l">Total</div></div>
   <div class="sbox"><div class="n">${read}</div><div class="l">Read</div></div>
@@ -888,36 +870,24 @@ function downloadHTMLReport(){
   <div class="sbox"><div class="n">${totalSpend?'₹'+totalSpend.toLocaleString('en-IN'):'—'}</div><div class="l">Total Spent</div></div>
 </div>
 <h2>All Books</h2>
-<table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Genre</th><th>Status</th><th>Year</th><th>Pages</th><th>Price</th><th>Rating</th><th>Purchased From</th></tr></thead>
-<tbody>${books.map((b,i)=>`<tr>
-  <td>${i+1}</td><td><strong>${b.title}</strong></td><td>${b.author}</td><td>${b.genre}</td>
-  <td>${b.status}</td><td>${b.year||'—'}</td><td>${b.pages||'—'}</td>
-  <td>${b.price?'₹'+parseFloat(b.price).toLocaleString('en-IN'):'—'}</td>
-  <td>${b.rating?'★'.repeat(b.rating)+'☆'.repeat(5-b.rating):'—'}</td>
-  <td>${b.purchase||'—'}</td>
-</tr>`).join('')}</tbody></table>
-${books.filter(b=>b.review).length?`
-<div class="review-section">
-<h2>Book Reviews</h2>
-${books.filter(b=>b.review).map(b=>`
-<div class="review-block">
-  <h4>${b.title} <span style="font-weight:normal;color:#888">by ${b.author}</span> ${b.rating?'— '+'★'.repeat(b.rating):''}</h4>
-  <p>"${b.review}"</p>
-</div>`).join('')}
-</div>`:''}
+<table><thead><tr><th>#</th><th>Title</th><th>Author</th><th>Genre</th><th>Status</th><th>Year</th><th>Pages</th><th>Price</th><th>Rating</th></tr></thead>
+<tbody>${books.map((b,i)=>`<tr><td>${i+1}</td><td><strong>${b.title}</strong></td><td>${b.author}</td><td>${b.genre}</td><td>${b.status}</td><td>${b.year||'—'}</td><td>${b.pages||'—'}</td><td>${b.price?'₹'+parseFloat(b.price).toLocaleString('en-IN'):'—'}</td><td>${b.rating?'★'.repeat(b.rating):'—'}</td></tr>`).join('')}</tbody></table>
+${books.filter(b=>b.review).length?`<h2 style="margin-top:2rem">Reviews</h2>${books.filter(b=>b.review).map(b=>`<div class="review-block"><h4>${b.title} <span style="font-weight:normal;color:#888">by ${b.author}</span></h4><p style="font-style:italic;color:#2d6aa0">"${b.review}"</p></div>`).join('')}`:''}
 </body></html>`;
-
-  triggerDownload('data:text/html;charset=utf-8,'+encodeURIComponent(html), 'my-library-report.html');
+  triggerDownload('data:text/html;charset=utf-8,'+encodeURIComponent(html),'pranavs-library-report.html');
 }
 
-function triggerDownload(dataURI, filename){
-  const a = document.createElement('a');
-  a.href = dataURI; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+function triggerDownload(dataURI,filename){
+  const a=document.createElement('a');
+  a.href=dataURI;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
-// ---- INIT ----
-renderBooks();
+// Make search/filter work
+document.getElementById('search-input').addEventListener('input', renderBooks);
+document.getElementById('filter-genre').addEventListener('change', renderBooks);
+document.getElementById('filter-status').addEventListener('change', renderBooks);
+
 </script>
 </body>
 </html>
